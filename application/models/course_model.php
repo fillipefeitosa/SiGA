@@ -2,11 +2,26 @@
 require_once(APPPATH."/exception/CourseNameException.php");
 require_once(APPPATH."/exception/CourseException.php");
 require_once(APPPATH."/exception/SecretaryException.php");
+require_once(APPPATH."/constants/GroupConstants.php");
+
 class Course_model extends CI_Model {
 
 	public function enrollStudentIntoCourse($enrollment){
 
 		$this->db->query($enrollment);
+	}
+
+	public function getCourseStudents($courseId){
+
+		$this->db->select("users.name, users.id, users.email, course_student.enroll_date");
+		$this->db->from('users');
+		$this->db->join("course_student", "course_student.id_user = users.id");
+		$this->db->where("course_student.id_course", $courseId);
+		$students = $this->db->get()->result_array();
+
+		$students = checkArray($students);
+
+		return $students;
 	}
 
 	public function getCourseName($courseId){
@@ -143,54 +158,44 @@ class Course_model extends CI_Model {
 	 * @throws SecretaryException
 	 * @return boolean
 	 */
-	public function saveCourseSecretaries($financialSecretaryUserId, $academicSecretaryUserId, $idCourse, $courseName){
-		/**
-		 * LINES 157 -> 165  ARE DEPRECATED CODE
-		 * 
-		 * $this->load->model('module_model');
-		 * $courseName = strtolower($courseName);
-		 * $separatedName = explode(' ', $courseName);
-		 * if ($separatedName){
-		 * $groupsNames = $this->module_model->prepareGroupName($separatedName);
-		 * }else {
-		 * $groupsNames = $this->module_model->prepareGroupName($courseName,TRUE);
-		 * }
-		 * $groupsIds = $this->module_model->getGroupIdByName($groupsNames);
-		 *
-		 */
-		define("FINANCIAL_SECRETARY_GROUP", 10);
-		define("ACADEMIC_SECRETARY_GROUP", 11);
+	public function saveCourseFinancialSecretary($financialSecretaryUserId, $idCourse, $courseName){
 		
-		$financialSecretaryToSave = array("id_user"  => $financialSecretaryUserId,
-										  "id_group" => FINANCIAL_SECRETARY_GROUP,
-										  "id_course"=> $idCourse);
+		$financialSecretaryToSave = array(
+			"id_user"  => $financialSecretaryUserId,
+			"id_group" => GroupConstants::FINANCIAL_SECRETARY_GROUP_ID,
+			"id_course"=> $idCourse
+		);
 		
-		$academicSecretaryToSave = array("id_user"  => $academicSecretaryUserId,
-										 "id_group" => ACADEMIC_SECRETARY_GROUP,
-										 "id_course"=> $idCourse);
-		
-		/**
-		 * DEPRECATED CODE
-		 *$this->db->select('course_name');
-		 *$this->db->where('id_course',$idCourse);
-		 *$courseName = $this->db->get('course')->row_array();
-		 */
 		try{
 			
 			$savedFinancial = $this->saveSecretary($financialSecretaryToSave);
+			
+		}catch (SecretaryException $caughtException){
+			throw $caughtException;
+		}
+		
+		return $savedFinancial;
+	}
+
+	public function saveCourseAcademicSecretary($academicSecretaryUserId, $idCourse, $courseName){
+
+		$academicSecretaryToSave = array(
+			"id_user"  => $academicSecretaryUserId,
+			"id_group" => GroupConstants::ACADEMIC_SECRETARY_GROUP_ID,
+			"id_course"=> $idCourse
+		);
+		
+		try{
+			
 			$savedAcademic  = $this->saveSecretary($academicSecretaryToSave);
 			
 		}catch (SecretaryException $caughtException){
 			throw $caughtException;
 		}
 		
-		$savedSecretaries = $savedAcademic && $savedFinancial;
-		if ($savedSecretaries){
-			return TRUE;
-		}else {
-			return FALSE;
-		}
+		return $savedAcademic;
 	}
+
 	
 	/**
 	 * Function to save a secretary in the database
@@ -198,11 +203,11 @@ class Course_model extends CI_Model {
 	 * @return boolean
 	 */
 	private function saveSecretary($secretary){
-		define("SECRETARY", 6);
 		
 		$alreadySavedSecretary = $this->checkExistingSecretary($secretary);
 		
 		if(!$alreadySavedSecretary){
+			
 			try{
 				$save = $this->db->insert("secretary_course", $secretary);
 			}catch (SecretaryException $caughtException){
@@ -210,7 +215,6 @@ class Course_model extends CI_Model {
 			}
 		
 			$alreadySavedUserGroup = $this->checkExistingSavedUserGroup($secretary['id_user'], $secretary['id_group']);
-			$alreadySavedSecretaryGroup = $this->checkExistingSavedUserGroup($secretary['id_user'], SECRETARY);
 			
 			if(!$alreadySavedUserGroup){
 					
@@ -224,23 +228,8 @@ class Course_model extends CI_Model {
 				// If the group is already saved, we dont need to save it again, so it's true that it's saved
 				$saveUserGroup = TRUE;
 			}
-			
-			if(!$alreadySavedSecretaryGroup){
 					
-				try{
-					$saveUserSecretary = $this->db->insert('user_group', array('id_user'=>$secretary['id_user'], 'id_group'=>SECRETARY));
-				}catch (SecretaryException $caughtException){
-					throw new SecretaryException('Não foi possível atribuir este grupo ao usuário. Verifique a existência do mesmo.');
-				}
-					
-			}else{
-				// If the group is already saved, we dont need to save it again, so it's true that it's saved
-				$saveUserSecretary = TRUE;
-			}
-			
-			$groupsWhereSaved = $saveUserGroup && $saveUserSecretary;
-			
-			if($save && $groupsWhereSaved){
+			if($save && $saveUserGroup){
 				$insertionStatus = TRUE;
 			}else{
 				$insertionStatus = FALSE;
@@ -252,7 +241,6 @@ class Course_model extends CI_Model {
 		}
 		
 		return $insertionStatus;
-		
 	}
 	
 	/**

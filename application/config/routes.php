@@ -70,9 +70,27 @@ $route['updateDoctorateCourse/(:num)'] = 'course/formToUpdateDoctorateCourse/$1'
 $route['user_report'] = 'usuario/usersReport';
 $route['enrollMastermind/(:num)'] = 'mastermind/enrollMastermindToStudent/$1';
 $route['checkMastermind/(:num)'] = 'mastermind/displayMastermindPage/$1';
-$route['mastermind'] = 'mastermind/displayMastermindStudents';
+$route['mastermind_home'] = 'mastermind/index';
 $route['student_information'] = 'usuario/studentInformationsForm';
 $route['coordinator_home'] = 'coordinator/index';
+$route['program'] = 'program/index';
+
+/*
+ * Secretary functionalities routes
+ */
+$route['enroll_student'] = "usuario/secretary_enrollStudent";
+$route['student_list'] = 'usuario/secretary_coursesStudents';
+$route['request_report'] = 'usuario/secretary_requestReport';
+$route['offer_list'] = 'usuario/secretary_offerList';
+$route['course_syllabus'] = 'usuario/secretary_courseSyllabus';
+$route['enroll_mastermind'] = 'usuario/secretary_enrollMasterMinds';
+
+/*
+ * Mastermind functionalities routes
+ */
+$route['mastermind'] = 'mastermind/displayMastermindStudents';
+$route['titling_area'] = 'mastermind/titlingArea';
+
 /*
  * Test report routes
  * To display the tests results of a class type in the url: ../class_test
