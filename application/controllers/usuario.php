@@ -155,6 +155,15 @@ class Usuario extends CI_Controller {
 		return $users;
 	}
 
+	public function getUserCourses($userId){
+
+		$this->load->model('usuarios_model');
+
+		$userCourses = $this->usuarios_model->getUserCourse($userId);
+
+		return $userCourses;
+	}
+
 	public function student_index(){
 
 		$loggedUserData = $this->session->userdata("current_user");
@@ -283,6 +292,17 @@ class Usuario extends CI_Controller {
 		);
 		
 		loadTemplateSafelyByPermission(PermissionConstants::DEFINE_MASTERMIND_PERMISSION, 'usuario/secretary_enroll_master_mind', $courseData);
+	}
+
+	public function secretary_enrollTeacher(){
+		
+		$courses = $this->loadCourses();
+		
+		$courseData = array(
+			'courses' => $courses
+		);
+		
+		loadTemplateSafelyByPermission(PermissionConstants::ENROLL_TEACHER_PERMISSION, 'secretary/enroll_teacher', $courseData);
 	}
 
 	public function secretary_requestReport(){

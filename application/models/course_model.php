@@ -6,6 +6,79 @@ require_once(APPPATH."/constants/GroupConstants.php");
 
 class Course_model extends CI_Model {
 
+	public function getCourseTeachers($courseId){
+
+		$this->db->select('users.name, teacher_course.*');
+		$this->db->from('users');
+		$this->db->join("teacher_course", "users.id = teacher_course.id_user");
+		$this->db->where("teacher_course.id_course", $courseId);
+		$teachers = $this->db->get()->result_array();
+
+		$teachers = checkArray($teachers);
+
+		return $teachers;
+	}
+
+	public function enrollTeacherToCourse($teacherId, $courseId){
+
+		$teacherToEnroll = array(
+			'id_user' => $teacherId,
+			'id_course' => $courseId
+		);
+
+		$this->db->insert('teacher_course', $teacherToEnroll);
+
+		$teacherCourse = $this->getTeacherCourse($teacherToEnroll);
+
+		$wasEnrolled = $teacherCourse !== FALSE;
+
+		return $wasEnrolled;
+	}
+
+	public function removeTeacherFromCourse($teacherId, $courseId){
+
+		$teacherToRemove = array(
+			'id_user' => $teacherId,
+			'id_course' => $courseId
+		);
+
+		$this->db->delete('teacher_course', $teacherToRemove);
+
+		$teacherCourse = $this->getTeacherCourse($teacherToRemove);
+
+		$wasRemoved = $teacherCourse === FALSE;
+
+		return $wasRemoved;
+	}
+
+	private function getTeacherCourse($dataToSearch){
+
+		$teacherCourse = $this->db->get_where('teacher_course', $dataToSearch)->row_array();
+
+		$teacherCourse = checkArray($teacherCourse);
+
+		return $teacherCourse;
+	}
+
+	public function defineTeacherSituation($courseId, $teacherId, $situation){
+
+		$where = array(
+			'id_user' => $teacherId,
+			'id_course' => $courseId
+		);
+
+		$this->db->where($where);
+		$this->db->update('teacher_course', array('situation' => $situation));
+
+		$where['situation'] = $situation;
+
+		$teacherCourse = $this->getTeacherCourse($where);
+
+		$wasDefined = $teacherCourse !== FALSE;
+
+		return $wasDefined;
+	}
+
 	public function enrollStudentIntoCourse($enrollment){
 
 		$this->db->query($enrollment);
@@ -469,6 +542,7 @@ class Course_model extends CI_Model {
 	 */
 	public function getCoursesOfSecretary($userId){
 		
+		$this->db->distinct();
 		$this->db->select('course.*');
 		$this->db->from('course');
 		$this->db->join('secretary_course','course.id_course = secretary_course.id_course');

@@ -65,13 +65,11 @@ $route['secretaria'] = 'utils/loadSecretaria';
 $route['secretary_home'] = 'usuario/secretary_index';
 $route['setores'] = 'setor/formulario';
 $route['setores/(:num)'] = 'setor/formulario_altera/$1';
-$route['student'] = 'usuario/student_index';
 $route['updateDoctorateCourse/(:num)'] = 'course/formToUpdateDoctorateCourse/$1';
 $route['user_report'] = 'usuario/usersReport';
 $route['enrollMastermind/(:num)'] = 'mastermind/enrollMastermindToStudent/$1';
 $route['checkMastermind/(:num)'] = 'mastermind/displayMastermindPage/$1';
 $route['mastermind_home'] = 'mastermind/index';
-$route['student_information'] = 'usuario/studentInformationsForm';
 $route['coordinator_home'] = 'coordinator/index';
 $route['program'] = 'program/index';
 
@@ -84,12 +82,21 @@ $route['request_report'] = 'usuario/secretary_requestReport';
 $route['offer_list'] = 'usuario/secretary_offerList';
 $route['course_syllabus'] = 'usuario/secretary_courseSyllabus';
 $route['enroll_mastermind'] = 'usuario/secretary_enrollMasterMinds';
+$route['enroll_teacher'] = 'usuario/secretary_enrollTeacher';
+$route['documents_report'] = 'documentrequest/documentRequestSecretary';
 
 /*
  * Mastermind functionalities routes
  */
 $route['mastermind'] = 'mastermind/displayMastermindStudents';
 $route['titling_area'] = 'mastermind/titlingArea';
+
+/*
+ * Student functionalities routes
+ */
+$route['student'] = 'usuario/student_index';
+$route['student_information'] = 'usuario/studentInformationsForm';
+$route['documents_request'] = "documentrequest/index";
 
 /*
  * Test report routes

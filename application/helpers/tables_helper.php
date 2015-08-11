@@ -243,7 +243,6 @@ function showExistingMastermindStudentsRelations($relationsToTable, $courseId){
 	
 function secretaryCoursesToRequestReport($courses){
 
-
 	$courseController = new Course();
 
 	echo "<div class=\"box-body table-responsive no-padding\">";
@@ -282,7 +281,7 @@ function secretaryCoursesToRequestReport($courses){
 		    
 		echo "</tbody>";
 	echo "</table>";
-echo "</div>";
+	echo "</div>";
 
 }
 
@@ -523,11 +522,11 @@ function requestedDisciplineClasses($requestId, $requestingArea){
 
 							echo "<td>";
 
-							$requestIsNotFinalizedBySecretary = $disciplineClass['secretary_approval'] != EnrollmentConstants::REQUEST_APPROVED_BY_SECRETARY;
+							$requestIsNotFinalizedBySecretary = $request['secretary_approval'] != EnrollmentConstants::REQUEST_APPROVED_BY_SECRETARY;
 
 							if($requestIsNotFinalizedBySecretary){
 								
-								$requestIsApprovedByMastermind = $disciplineClass['mastermind_approval'] == EnrollmentConstants::REQUEST_APPROVED_BY_MASTERMIND;
+								$requestIsApprovedByMastermind = $request['mastermind_approval'] == EnrollmentConstants::REQUEST_APPROVED_BY_MASTERMIND;
 
 								// Depends of the area that are treating the request
 								switch($requestingArea){
@@ -715,7 +714,9 @@ function requestedDisciplineClassesForMastermind($requestId, $idMastermind, $idS
 
 
 function displayMastermindStudentRequest($requests, $idMastermind){
+	
 	$user = new Usuario();
+
 	echo "<br>";
 	echo "<h3>Solicitações dos alunos orientados:</h3>";
 	echo "<br>";
@@ -728,9 +729,8 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 					echo "<th class=\"text-center\">Aluno requerente</th>";
 					echo "<th class=\"text-center\">Matrícula aluno</th>";
 					echo "<th class=\"text-center\">Status da solicitação</th>";
-					echo "<th class=\"text-center\">Vizualização</th>";
-					echo "<th class=\"text-center\">Aprovação</th>";
-					echo "<th class=\"text-center\">Rejeição</th>";
+					echo "<th class=\"text-center\">Ações</th>";
+					echo "<th class=\"text-center\">Finalizar</th>";
 				echo "</tr>";
 				
 				if($requests !== FALSE){
@@ -741,12 +741,14 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 
 							foreach ($request as $studentRequest){
 								
+								$requestId = $studentRequest['id_request'];
+
 								$requestIsApprovedByMastermind = $studentRequest['mastermind_approval'] == EnrollmentConstants::REQUEST_APPROVED_BY_MASTERMIND;
 
 								echo "<tr>"; 
 						
 								echo "<td>";
-								echo $studentRequest['id_request'];
+								echo $requestId;
 								echo "</td>";
 								 
 								$foundUser = $user->getUserById($studentRequest['id_student']);
@@ -757,56 +759,7 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 								echo "<td>";
 								echo $foundUser['id'];
 								echo "</td>";
-								 
-/*<<<<<<< HEAD
-								$offer = new Offer();
-								$disciplineClass = $offer->getOfferDisciplineById($studentRequest['discipline_class']);
-									
-									echo "<td>";
-									switch($studentRequest['status']){
-										case EnrollmentConstants::PRE_ENROLLED_STATUS:
-											echo "Pré-matriculado";
-											break;
-										
-										case EnrollmentConstants::ENROLLED_STATUS: 
-											echo "Matriculado";
-											break;
-										
-										case EnrollmentConstants::NO_VACANCY_STATUS: 
-											echo "Não existem mais vagas";
-											break;
-											
-										case EnrollmentConstants::REFUSED_STATUS:
-											echo "Matricula Negada";
-											break;
-											
-										default:
-											echo "-";
-											break;
-									}
-									echo "</td>";
-						
-									echo "<td>";
-										echo anchor(
-												"#solicitation_details_".$studentRequest['id_request'],
-												"Visualizar solicitação",
-												"class='btn btn-primary btn-block'
-										    				data-toggle='collapse'
-										    				aria-expanded='false'
-										    				aria-controls='solicitation_details".$studentRequest['id_request']."'"
-										);
-									echo "</td>";
-									echo "<td>";
-										displayAcceptStudentsSolicitation($studentRequest['id_request'], $studentRequest['id_student'], $idMastermind);
-									echo "</td>";
-									echo "<td>";
-										displayRefuseStudentsSolicitation($studentRequest['id_request'], $studentRequest['id_student'], $idMastermind);
-									echo "</td>";
-									
-=======*/
-								// $offer = new Offer();
-								// $disciplineClass = $offer->getOfferDisciplineById($studentRequest['discipline_class']);
-									
+	
 								echo "<td>";
 
 								$status = switchRequestGeneralStatus($studentRequest['request_status']);
@@ -823,12 +776,12 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 								echo "<td>";
 								
 								echo anchor(
-										"#solicitation_details_".$studentRequest['id_request'],
+										"#solicitation_details_".$requestId,
 										"Visualizar solicitação",
 										"class='btn btn-info'
 					    				data-toggle='collapse'
 					    				aria-expanded='false'
-					    				aria-controls='solicitation_details".$studentRequest['id_request']."'"
+					    				aria-controls='solicitation_details".$requestId."'"
 									);
 								
 								if($requestIsApprovedByMastermind){
@@ -836,35 +789,44 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 									// Disable buttons
 									echo anchor("", "Aprovar toda solicitação", "class='btn btn-success' style='margin-top:5%;' disabled='true'");
 									echo "<br>";
-									echo anchor("", "Recusar toda solicitação", "class='btn btn-danger' style='margin-top:5%;' disabled='true'");
-									echo "<br>";
-									echo anchor("", "Já Finalizada!", "class='btn bg-olive btn-flat' style='margin-top:10%;' disabled='true'");
+									echo anchor("", "Recusar toda solicitação", "class='btn btn-danger' style='margin-top:5%;' disabled='true'");									
 								}else{
 									echo "<br>";
-									echo anchor("request/approveAllStudentRequestsByMastermind/{$studentRequest['id_request']}/{$studentRequest['id_student']}", "Aprovar toda solicitação", "class='btn btn-success' style='margin-top:5%;'");
+									echo anchor("request/approveAllStudentRequestsByMastermind/{$requestId}/{$studentRequest['id_student']}", "Aprovar toda solicitação", "class='btn btn-success' style='margin-top:5%;'");
 									echo "<br>";
-									echo anchor("request/refuseAllStudentRequestsByMastermind/{$studentRequest['id_request']}/{$studentRequest['id_student']}", "Recusar toda solicitação", "class='btn btn-danger' style='margin-top:5%;'");
-									echo "<br>";
-									echo "<div class=\"callout callout-info\">";
-										echo anchor("mastermind/finalizeRequest/{$studentRequest['id_request']}", "Finalizar solicitação", "class='btn btn-primary btn-flat'");
-										echo "<p><i>Finaliza a solicitação com o estado atual das disciplinas.</i></p>";
-									echo "</div>";
+									echo anchor("request/refuseAllStudentRequestsByMastermind/{$requestId}/{$studentRequest['id_student']}", "Recusar toda solicitação", "class='btn btn-danger' style='margin-top:5%;'");
 								}
 
+								echo "</td>";
+								
+								echo "<td rowspan=2>";
+									if($requestIsApprovedByMastermind){
+
+										$mastermind = new MasterMind();
+
+										$message = $mastermind->getMastermindMessage($idMastermind, $requestId);
+										
+										$isFinalized = TRUE;
+										echo "<div class=\"callout callout-warning\">";
+											mastermindMessageForm($requestId, $idMastermind, $isFinalized, $message);
+											echo "<p><i>Solicitação finalizada. É possível alterar a mensagem deixada para o aluno.</i></p>";
+										echo "</div>";	
+
+									}else{
+										$isFinalized = FALSE;
+										echo "<div class=\"callout callout-info\">";
+											mastermindMessageForm($requestId, $idMastermind, $isFinalized);
+											echo "<p><i>Finaliza a solicitação com o status atual das disciplinas.</i></p>";
+										echo "</div>";	
+									}
 								echo "</td>";
 
 								echo "</tr>";
 
 								echo "<tr>";
-/*<<<<<<< HEAD
-								
-									echo "<td colspan=9>";
-										echo "<div class='collapse' id='solicitation_details_".$studentRequest['id_request']."'>";
-										requestedDisciplineClassesForMastermind($studentRequest['id_request'], $idMastermind, $studentRequest['id_student']);
-=======*/
-									echo "<td colspan=4>";
-										echo "<div class='collapse' id='solicitation_details_".$studentRequest['id_request']."'>";
-										requestedDisciplineClasses($studentRequest['id_request'], EnrollmentConstants::REQUESTING_AREA_MASTERMIND);
+									echo "<td colspan=5>";
+										echo "<div class='collapse' id='solicitation_details_".$requestId."'>";
+										requestedDisciplineClasses($requestId, EnrollmentConstants::REQUESTING_AREA_MASTERMIND);
 										echo "</div>";
 									echo "</td>";
 								echo "</tr>";
@@ -886,77 +848,7 @@ function displayMastermindStudentRequest($requests, $idMastermind){
 	echo "</div>";
 }
 
-function searchForStudentRequestByIdForm($courseId){
-
-	$student = array(
-		"name" => "student_identifier",
-		"id" => "student_identifier",
-		"type" => "text",
-		"class" => "form-campo",
-		"class" => "form-control",
-		"maxlength" => "50",
-		'style' => "width:80%;"
-	);
-
-	$searchForStudentBtn = array(
-		"id" => "search_student_request_btn",
-		"class" => "btn bg-primary btn-flat",
-		"content" => "Pesquisar por matrícula",
-		"type" => "submit"
-	);
-
-	define("SEARCH_BY_ID", "by_id");
-
-	echo "<h4><i class='fa fa-search'></i> Pesquisar por matrícula do aluno</h4>";
-	echo form_open("request/searchForStudentRequest");
-		echo form_hidden('searchType', SEARCH_BY_ID); 
-		echo form_hidden('courseId', $courseId);
-		
-		echo "<div class='form-group'>";
-			echo form_label("Informe a matrícula do aluno para pesquisar:", "student_identifier");
-			echo form_input($student);
-		echo "</div>";
-		
-		echo form_button($searchForStudentBtn);
-	echo form_close();
-}
-
-function searchForStudentRequestByNameForm($courseId){
-
-	$student = array(
-		"name" => "student_identifier",
-		"id" => "student_identifier",
-		"type" => "text",
-		"class" => "form-campo",
-		"class" => "form-control",
-		"maxlength" => "50",
-		'style' => "width:80%;"
-	);
-
-	$searchForStudentBtn = array(
-		"id" => "search_student_request_btn",
-		"class" => "btn bg-primary btn-flat",
-		"content" => "Pesquisar por nome",
-		"type" => "submit"
-	);
-
-	define("SEARCH_BY_NAME", "by_name");
-
-	echo "<h4><i class='fa fa-search'></i> Pesquisar por nome do aluno</h4>";
-	echo form_open("request/searchForStudentRequest");
-		echo form_hidden('searchType', SEARCH_BY_NAME); 
-		echo form_hidden('courseId', $courseId);
-		
-		echo "<div class='form-group'>";
-			echo form_label("Informe o nome do aluno para pesquisar:", "student_identifier");
-			echo form_input($student);
-		echo "</div>";
-		
-		echo form_button($searchForStudentBtn);
-	echo form_close();
-}
-
-function displaySentDisciplinesToEnrollmentRequest($requestDisciplinesClasses,$mastermind_message){
+function displaySentDisciplinesToEnrollmentRequest($requestDisciplinesClasses){
 
 	$discipline = new Discipline();
 
@@ -968,7 +860,6 @@ function displaySentDisciplinesToEnrollmentRequest($requestDisciplinesClasses,$m
 			        echo "<th class=\"text-center\">Disciplina</th>";
 			        echo "<th class=\"text-center\">Turma</th>";
 			        echo "<th class=\"text-center\">OBS</th>";
-			        echo "<th class=\"text-center\">Mensagem Orientador</th>";
 			    echo "</tr>";
 
 			    if($requestDisciplinesClasses !== FALSE){
@@ -994,10 +885,7 @@ function displaySentDisciplinesToEnrollmentRequest($requestDisciplinesClasses,$m
 
 				    		echo "<td>";
 				    		echo $disciplineRequestStatus;
-				    		echo "<td>";
-				    		
-			    			echo $mastermind_message;
-				    	
+				    		echo "</td>";
 				    		
 			    		echo "</tr>";	
 			    		
@@ -1337,91 +1225,6 @@ function displayDisciplineHours($idOfferDiscipline){
 	}else{
 		echo "<div class='callout callout-info'>";
 		echo "<h4>Sem horários adicionados no momento.</h4>";
-		echo "</div>";
-	}
-}
-
-function formToNewOfferDisciplineClass($idDiscipline, $idOffer, $teachers){
-
-	$disciplineClass = array(
-		"name" => "disciplineClass",
-		"id" => "disciplineClass",
-		"type" => "text",
-		"class" => "form-campo",
-		"class" => "form-control",
-		"maxlength" => "3"
-	);
-
-	$totalVacancies = array(
-		"name" => "totalVacancies",
-		"id" => "totalVacancies",
-		"type" => "number",
-		"class" => "form-campo",
-		"class" => "form-control",
-		"min" => "0",
-		"value" => "0"
-	);
-
-	$submitBtn = array(
-		"class" => "btn bg-olive btn-block",
-		"type" => "submit",
-		"content" => "Cadastrar turma"
-	);
-
-	echo form_open("offer/newOfferDisciplineClass/{$idDiscipline}/{$idOffer}");
-
-		echo "<div class='form-box'>";
-			echo"<div class='header'>Nova turma para oferta</div>";
-			echo "<div class='body bg-gray'>";
-
-				echo "<div class='form-group'>";
-					echo form_label("Turma", "disciplineClass");
-					echo form_input($disciplineClass);
-					echo form_error("disciplineClass");
-				echo "</div>";
-
-				echo "<div class='form-group'>";
-					echo form_label("Vagas totais", "totalVacancies");
-					echo form_input($totalVacancies);
-					echo form_error("disciplineClass");
-				echo "</div>";
-
-				echo "<div class='form-group'>";
-					echo form_label("Professor principal", "mainTeacher");
-					if($teachers !== FALSE){
-						echo form_dropdown("mainTeacher", $teachers, '', "class='form-control'");
-					}else{
-						$submitBtn['disabled'] = TRUE;
-						echo form_dropdown("mainTeacher", array('Nenhum professor cadastrado.'), '', "class='form-control'");
-					}
-					echo form_error("mainTeacher");
-				echo "</div>";
-
-				echo "<div class='form-group'>";
-					echo form_label("Professor secundário", "secondaryTeacher");
-					if($teachers !== FALSE){
-						define("NONE_TEACHER", 0);
-						$teachers[NONE_TEACHER] = "Nenhum";
-						echo form_dropdown("secondaryTeacher", $teachers, NONE_TEACHER, "class='form-control'");
-					}else{
-						echo form_dropdown("secondaryTeacher", array('Nenhum professor cadastrado.'), '', "class='form-control'");
-					}
-					echo form_error("secondaryTeacher");
-				echo "</div>";
-		
-			echo "</div>";
-			echo "<div class='footer bg-gray'>";
-				echo form_button($submitBtn);
-			echo "</div>";
-		echo "</div>";
-
-	echo form_close();
-
-	if($teachers === FALSE){
-
-		echo "<div class='callout callout-danger'>";
-			echo "<h4>Não é possível cadastrar uma turma para oferta sem um professor principal.</h4>";
-			echo "<p>Contate o administrador.</p>";
 		echo "</div>";
 	}
 }
@@ -1941,13 +1744,12 @@ function displaySyllabusDisciplines($syllabusId, $syllabusDisciplines, $courseId
 
 function displayDisciplinesToSyllabus($syllabusId, $allDisciplines, $courseId){
 
-	echo "<h4>Lista de disciplinas:</h4>";
 	echo "<div class=\"box-body table-responsive no-padding\">";
 		echo "<table class=\"table table-bordered table-hover\">";
 			echo "<tbody>";
 
 			    echo "<tr>";
-			        echo "<th class=\"text-center\">Código: </th>";
+			        echo "<th class=\"text-center\">Código </th>";
 			        echo "<th class=\"text-center\">Sigla</th>";
 			        echo "<th class=\"text-center\">Disciplina</th>";
 			        echo "<th class=\"text-center\">Créditos</th>";
@@ -1994,7 +1796,7 @@ function displayDisciplinesToSyllabus($syllabusId, $allDisciplines, $courseId){
 			    	echo "<tr>";
 					    	echo "<td colspan=5>";
 						    	echo "<div class=\"callout callout-warning\">";
-	                            	echo "<h4>Não há disciplinas cadastradas no momento.</h4>";
+	                            	echo "<h4>Nenhuma disciplina encontrada.</h4>";
 	                            echo "</div>";
 					    	echo "</td>";
 					echo "</tr>";
