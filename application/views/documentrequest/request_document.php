@@ -3,7 +3,13 @@
 <h2 class="principal">Solicitação de Documentos</h2>
 
 <h3><i class="fa fa-list"></i> Documentos já solicitados</h3>
-<br>
+<?php 
+	echo anchor(
+		"documentrequest/displayArchivedRequests/{$courseId}/{$userId}",
+		"Solicitações arquivadas",
+		"class='btn btn-success'"
+	); 
+?>
 <?php if($documentRequests !== FALSE){ ?>
 
 		<div class="box-body table-responsive no-padding">
@@ -12,6 +18,7 @@
 				<tr>
 			        <th class="text-center">Código</th>
 			        <th class="text-center">Tipo do documento</th>
+			        <th class="text-center">Data da solicitação</th>
 			        <th class="text-center">Status</th>
 			        <th class="text-center">Dados adicionais</th>
 			        <th class="text-center">Ações</th>
@@ -27,7 +34,16 @@
 				    		echo "<td>";
 					    		$docConstants = new DocumentConstants();
 					    		$allTypes = $docConstants->getAllTypes();
-					    		echo $allTypes[$request['document_type']];
+					    		
+					    		if($allTypes !== FALSE){
+					    			echo $allTypes[$request['document_type']];
+					    		}else{
+					    			echo "-";
+					    		}
+					    	echo "</td>";
+
+				    		echo "<td>";
+				    			echo $request['date'];
 				    		echo "</td>";
 
 				    		echo "<td>";
@@ -47,7 +63,7 @@
 				    		echo "<td>";
 				    		switch($request['document_type']){
 				    			case DocumentConstants::OTHER_DOCS:
-				    				echo "<b>Documento solicitado: </b>".$request['other_name'];
+				    				echo "<b>Solicitação: </b>".$request['other_name'];
 				    				break;
 				    			
 				    			default:
@@ -58,7 +74,11 @@
 
 				    		echo "<td>";
 				    		if($request['status'] === DocumentConstants::REQUEST_READY){
-				    			echo "<i class='fa fa-check'></i>";
+				    			echo anchor(
+					    			"documentrequest/archiveRequest/{$request['id_request']}/{$courseId}/{$userId}",
+						    		"<i class='fa fa-archive'></i> Arquivar",
+						    		"class='btn btn-success'"
+					    		);
 				    		}else{
 					    		echo anchor(
 					    			"documentrequest/cancelRequest/{$request['id_request']}/{$courseId}/{$userId}",
@@ -78,7 +98,7 @@
  	} else{
 ?>
 	<div class="callout callout-info">
-		<h4>Nenhum solicitação de documentos feita pelo aluno.</h4>
+		<h4>Nenhuma solicitação de documentos feita pelo aluno.</h4>
 	</div>
 <?php }?>
 
@@ -96,10 +116,10 @@
 	</div>
 
 	<br>
-	<br>
 	<div id="document_request_data"></div>
 
 <?= form_close() ?>
 
+<br>
 <br>
 <?= anchor('documents_request', 'Voltar', "class='btn btn-danger'")?>

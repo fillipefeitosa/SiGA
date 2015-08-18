@@ -31,7 +31,7 @@ class DocumentRequest extends CI_Controller {
 
 		$studentRequests = $this->doc_request_model->getStudentsRequestOfCourse($userId, $courseId);
 
-		$types = $this->doc_request_model->allDocumentTypes();
+		$types = $this->doc_request_model->allNonDeclarationTypes();
 
 		if($types !== FALSE){
 			foreach($types as $type){
@@ -66,13 +66,28 @@ class DocumentRequest extends CI_Controller {
 			case DocumentConstants::PASSAGE_SOLICITATION:
 				break;
 
-			case DocumentConstants::TRANSCRIPT:
-				break;
-
 			case DocumentConstants::TRANSFER_DOCS:
 				break;
 
-			case DocumentConstants::SCHEDULE:
+			case DocumentConstants::DECLARATIONS:
+
+				$submitBtn = array(
+					"id" => "request_document_btn",
+					"class" => "btn bg-primary btn-flat",
+					"content" => "Solicitar documento",
+					"type" => "submit"
+				);
+
+				$docRequest = new DocumentConstants();
+				$declarationTypes = $docRequest->getDeclarationTypes();
+
+				echo "<div class='form-group'>";
+				echo form_label("Escolha o tipo de declaração:", "declarationType");
+				echo form_dropdown("declarationType", $declarationTypes, '', "id='declarationType' class='form-control' style='width:40%;'");
+				echo"</div>";
+
+				echo form_button($submitBtn);
+
 				break;
 
 			case DocumentConstants::OTHER_DOCS:
@@ -127,13 +142,33 @@ class DocumentRequest extends CI_Controller {
 			case DocumentConstants::PASSAGE_SOLICITATION:
 				break;
 
-			case DocumentConstants::TRANSCRIPT:
-				break;
-
 			case DocumentConstants::TRANSFER_DOCS:
 				break;
 
-			case DocumentConstants::SCHEDULE:
+			case DocumentConstants::DECLARATIONS:
+				
+				$declarationType = $this->input->post('declarationType');
+
+				$requestData = array(
+					'id_student' =>	$studentId,
+					'id_course' => $courseId,
+					'document_type' => $declarationType,
+					'status' => DocumentConstants::REQUEST_OPEN
+				);
+
+				$wasSaved = $this->saveDocumentRequest($requestData);
+
+				if($wasSaved){
+					$status = "success";
+					$message = "Solicitação de documento enviada com sucesso.";
+				}else{
+					$status = "danger";
+					$message = "Não foi possível enviar a solicitação de documento informada.";
+				}
+
+				$this->session->set_flashdata($status, $message);
+				redirect("documentrequest/requestDocument/{$courseId}/{$studentId}");
+
 				break;
 
 			case DocumentConstants::OTHER_DOCS:
@@ -195,6 +230,39 @@ class DocumentRequest extends CI_Controller {
 		redirect("documentrequest/requestDocument/{$courseId}/{$studentId}");
 	}
 
+	public function archiveRequest($requestId, $courseId, $studentId){
+
+		$this->load->model('documentrequest_model', "doc_request_model");
+
+		$wasArchived = $this->doc_request_model->archiveRequest($requestId);
+
+		if($wasArchived){
+			$status = "success";
+			$message = "Solicitação de documento arquivada com sucesso.";
+		}else{
+			$status = "danger";
+			$message = "Não foi possível arquivar a solicitação de documento informada.";
+		}
+
+		$this->session->set_flashdata($status, $message);
+		redirect("documentrequest/requestDocument/{$courseId}/{$studentId}");
+	}
+
+	public function displayArchivedRequests($courseId, $studentId){
+
+		$this->load->model('documentrequest_model', "doc_request_model");
+
+		$archivedRequests = $this->doc_request_model->getStudentArchivedRequests($studentId, $courseId);
+
+		$data = array(
+			'archivedRequests' => $archivedRequests,
+			'courseId' => $courseId,
+			'studentId' => $studentId
+		);
+
+		loadTemplateSafelyByPermission(PermissionConstants::DOCUMENT_REQUEST_PERMISSION, "documentrequest/archived_requests", $data);
+	}
+
 	// Functions to secretary //
 
 	public function documentRequestSecretary(){
@@ -247,5 +315,39 @@ class DocumentRequest extends CI_Controller {
 
 		$this->session->set_flashdata($status, $message);
 		redirect("documentrequest/documentRequestReport/{$courseId}");
+	}
+
+	public function displayAnsweredRequests($courseId){
+
+		$this->load->model('documentrequest_model', "doc_request_model");
+
+		$answeredRequests = $this->doc_request_model->getAnsweredRequests($courseId);
+
+		$data = array(
+			'answeredRequests' => $answeredRequests,
+			'courseId' => $courseId
+		);
+
+		loadTemplateSafelyByPermission(PermissionConstants::DOCUMENT_REQUEST_REPORT_PERMISSION, "documentrequest/answered_requests", $data);
+	}
+
+	// Other methods
+
+	public function allNonDeclarationTypes(){
+
+		$this->load->model('documentrequest_model', "doc_request_model");
+
+		$types = $this->doc_request_model->allNonDeclarationTypes();		
+
+		return $types;
+	}
+
+	public function allDeclarationTypes(){
+
+		$this->load->model('documentrequest_model', "doc_request_model");
+
+		$types = $this->doc_request_model->allDeclarationTypes();		
+
+		return $types;
 	}
 }
