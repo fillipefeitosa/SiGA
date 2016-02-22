@@ -8,3 +8,4 @@ user_guide
 application/config/*.php
 application/views/header.php
 /nbproject/private/
+siga.sublime-workspace
